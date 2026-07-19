@@ -11,6 +11,7 @@ import asyncio
 import logging
 import os
 import sqlite3
+import aiohttp
 from datetime import date, timedelta
 
 from aiogram import Bot, Dispatcher, Router, F
@@ -50,6 +51,7 @@ BTN_NOTE = "💌 Новая заметка"
 BTN_TODAY = "📅 Сегодня"
 BTN_CANCEL = "❌ Отмена"
 BTN_PRODUCTS = "🛒 Продукты"
+BTN_WEATHER = " Погода"  # <--- ДОБАВИТЬ ЭТУ СТРОКУ
 
 
 def main_menu_kb() -> ReplyKeyboardMarkup:
@@ -57,6 +59,7 @@ def main_menu_kb() -> ReplyKeyboardMarkup:
         keyboard=[
             [KeyboardButton(text=BTN_TASK), KeyboardButton(text=BTN_NOTE)],
             [KeyboardButton(text=BTN_TODAY), KeyboardButton(text=BTN_PRODUCTS)],  # ← добавили BTN_PRODUCTS сюда
+            [KeyboardButton(text=BTN_WEATHER)],
         ],
         resize_keyboard=True,
     )
