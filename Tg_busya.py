@@ -371,6 +371,13 @@ async def task_text_entered(message: Message, state: FSMContext) -> None:
         reply = f"Задача на {data['task_date']} добавлена ✅"
     else:
         reply = f"Задача для {get_user_name(data['assignee_id'])} на {data['task_date']} отправлена ✅"
+        try:
+            await bot.send_message(
+                data["assignee_id"],
+                f"📝 Новая задача от {get_user_name(message.chat.id)} на {data['task_date']}:\n{message.text}",
+            )
+        except Exception:
+            logging.exception("Не смог уведомить пользователя %s о новой задаче", data["assignee_id"])
     await message.answer(reply, reply_markup=main_menu_kb())
 
 
@@ -432,7 +439,13 @@ async def note_text_entered(message: Message, state: FSMContext) -> None:
     await state.clear()
     recipient_name = get_user_name(data["recipient_id"])
     await message.answer(f"Заметка для {recipient_name} на {data['note_date']} сохранена ✅", reply_markup=main_menu_kb())
-
+    try:
+        await bot.send_message(
+            data["recipient_id"],
+            f"💌 Новая заметка от {get_user_name(message.chat.id)} на {data['note_date']}:\n{message.text}",
+        )
+    except Exception:
+        logging.exception("Не смог уведомить пользователя %s о новой заметке", data["recipient_id"])
 
 # ---------- /today ----------
 # ---------- 🛒 Продукты ----------
