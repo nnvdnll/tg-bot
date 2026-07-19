@@ -220,7 +220,38 @@ def set_shopping_list(content: str) -> None:
     )
     conn.commit()
     conn.close()
+# ---------- Погода ----------
 
+async def get_weather(city: str = "Moscow") -> str:
+    """Получает погоду из OpenWeatherMap."""
+    api_key = os.getenv("OPENWEATHER_API_KEY")
+    if not api_key:
+        return "️ API ключ погоды не настроен администратором."
+
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric&lang=ru"
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    temp = data['main']['temp']
+                    desc = data['weather'][0]['description']
+                    wind = data['wind']['speed']
+                    name = data['name']
+                    
+                    return (
+                        f" <b>Погода в {name}:</b>\n\n"
+                        f" Температура: {temp}°C\n"
+                        f"💨 Ветер: {wind} м/с\n"
+                        f"☁️ {desc.capitalize()}"
+                    )
+                else:
+                    return "❌ Не удалось загрузить погоду. Попробуйте позже."
+    except Exception as e:
+        logging.error(f"Ошибка при получении погоды: {e}")
+        return "❌ Произошла ошибка при запросе погоды."
+        
 # ---------- Выбор даты (страница пересчитывается от сегодняшней даты каждый раз) ----------
 
 def format_day(d: date) -> str:
@@ -474,6 +505,20 @@ async def products_list_entered(message: Message, state: FSMContext) -> None:
     set_shopping_list(message.text)
     await state.clear()
     await message.answer("Список продуктов обновлён ✅", reply_markup=main_menu_kb())
+
+# ---------- Обработчик погоды ----------
+
+@router.message(F.text == BTN_WEATHER)
+async def btn_weather(message: Message) -> None:
+    if not is_registered(message.chat.id):
+        await message.answer("Сначала зарегистрируйся: отправь /start")
+        return
+    
+    # Можно сделать город настраиваемым, пока ставим Москву по умолчанию
+    # Или брать город из имени пользователя, если там написано "Имя, Город"
+    weather_text = await get_weather() 
+    await message.answer(weather_text, parse_mode="HTML", reply_markup=main_menu_kb())
+    
 
 def build_digest(chat_id: int, for_date: str) -> str:
     tasks = get_tasks(chat_id, for_date)
